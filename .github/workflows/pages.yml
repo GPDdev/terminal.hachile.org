@@ -1,0 +1,63 @@
+name: Publish Hachile Terminal
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '17 19 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terminal-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        if: github.event_name != 'push'
+        with:
+          python-version: '3.12'
+      - uses: actions/cache/restore@v4
+        if: github.event_name != 'push'
+        with:
+          path: public/data
+          key: terminal-index-v1-${{ github.run_id }}
+          restore-keys: terminal-index-v1-
+      - name: Refresh public index
+        if: github.event_name != 'push'
+        run: |
+          pip install -r scripts/requirements.txt
+          python -m playwright install --with-deps chromium
+          python scripts/index_sites.py
+      - run: node --test
+      - uses: actions/cache/save@v4
+        if: github.event_name != 'push'
+        with:
+          path: public/data
+          key: terminal-index-v1-${{ github.run_id }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

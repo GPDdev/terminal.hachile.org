@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101512">
+  <meta name="description" content="Hachile 的站群终端。用 Linux 风格命令阅读公开页面、检索文章、查看媒体链接，或直接进入原站。">
+  <link rel="icon" href="./terminal.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./terminal.css">
+  <title>Hachile Terminal</title>
+</head>
+<body>
+  <header class="mast">
+    <a class="brand" href="./" aria-label="Hachile Terminal 主页"><img src="./terminal.svg" alt="" width="36" height="36"><strong>Hachile <span>Terminal</span></strong></a>
+    <nav aria-label="站外链接"><a href="https://site.hachile.org/">站群目录</a><a href="https://github.com/GPDdev/terminal.hachile.org">GitHub</a></nav>
+  </header>
+  <main class="desktop">
+    <aside id="mounts" aria-labelledby="mount-title">
+      <div class="pane-head"><h2 id="mount-title"><span aria-hidden="true">▤</span> 挂载站点</h2><span id="mount-count"></span></div>
+      <div class="volume-tools"><label for="filter">查找站点</label><input id="filter" type="search" placeholder="筛选名称或域名" autocomplete="off"></div>
+      <div id="volumes"></div>
+      <button id="coverage" class="aside-foot" type="button"><span class="dot"></span> 查看索引状态</button>
+    </aside>
+    <section class="console" aria-label="交互终端">
+      <div class="console-head"><div class="session-name"><span class="session-light"></span><strong>guest@hachile</strong><span class="divider">/</span><span>shell</span></div>
+        <div class="controls"><button id="toggle-mounts" aria-controls="mounts" aria-expanded="false" type="button">站点</button><button id="manual" type="button">命令手册</button><button id="wipe" type="button">清屏</button></div>
+      </div>
+      <div id="screen" tabindex="0" aria-label="终端输出">
+        <section id="welcome">
+          <h1><span class="sr">Hachile Terminal</span><span aria-hidden="true">HACHILE<span class="cursor-mark">_</span></span></h1>
+          <p>在命令行里逛 Hachile。进入站点目录，读文章、查项目，也可以直接打开原站。</p>
+          <div class="tries" aria-label="试运行命令">
+            <button type="button" data-example="cat /sites/home/index.txt"><code>cat /sites/home/index.txt</code><span>阅读主页</span></button>
+            <button type="button" data-example="search 世界模型"><code>search 世界模型</code><span>搜索全文</span></button>
+          </div>
+        </section>
+        <div id="transcript" aria-label="命令记录"></div>
+      </div>
+      <form id="line" autocomplete="off">
+        <label for="command"><span>guest</span><i>@</i><span>hachile</span><i>:</i><b id="cwd">/sites</b><i>$</i></label>
+        <input id="command" aria-label="Linux 风格命令" placeholder="输入命令，试试 ls" spellcheck="false" autocapitalize="off" enterkeyhint="go" disabled>
+        <button id="run" type="submit" aria-label="执行命令" title="执行命令" disabled>↵</button>
+      </form>
+      <div class="keys"><span><kbd>Tab</kbd> 补全</span><span><kbd>↑ ↓</kbd> 历史</span><span><kbd>Ctrl L</kbd> 清屏</span><span id="info" role="status">正在挂载…</span></div>
+    </section>
+  </main>
+  <noscript><p>交互终端需要启用 JavaScript。<a href="https://site.hachile.org/">浏览 Hachile 站点目录</a></p></noscript>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "extraSites": [
+    {"id":"site","name":"The Hachile Project","url":"https://site.hachile.org/","description":"站点目录、站群宗旨与更新日志。"},
+    {"id":"tongji","name":"同济导航","url":"http://tongji.hachile.org/","description":"校园服务、学习资源与学生生活导航。"},
+    {"id":"api","name":"Hachile API","url":"https://api.hachile.org/","description":"模型网关服务入口。","mode":"link"},
+    {"id":"resume","name":"Resume","url":"https://resume.hachile.org/","description":"早期使用的简历域名，现行履历可在 cv 目录阅读。"},
+    {"id":"terminal","name":"Hachile Terminal","url":"https://terminal.hachile.org/","description":"用命令浏览 Hachile 站群的公开内容。","mode":"self"}
+  ],
+  "entryPaths": {
+    "portal":["/m/","/m/en/","/en/","/gunpowder/","/skyblue/","/hanhua/"],
+    "home":["/m/","/m/en/","/en/","/gunpowder/"],
+    "sky":["/en/","/m/","/m/en/"],
+    "old":["/gunpowder/","/skyblue/"],
+    "tongji":["/privacy.html"]
+  }
+}
