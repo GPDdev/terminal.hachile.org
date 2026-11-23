@@ -158,6 +158,15 @@ def clean_text(node):
     # Preserve paragraphs, list items, source code lines and table rows.
     for node_ in node.find_all(string=lambda val: isinstance(val, Comment)):
         node_.extract()
+    code_blocks = []
+    for pre in node.find_all("pre"):
+        for br in pre.find_all("br"):
+            br.replace_with("\n")
+        editor_lines = pre.select(".ec-line")
+        value = "\n".join(line.get_text() for line in editor_lines) if editor_lines else pre.get_text()
+        marker = "\ue000" + str(len(code_blocks)) + "\ue001"
+        code_blocks.append((marker, value.rstrip("\n")))
+        pre.replace_with("\n" + marker + "\n")
     for tag in node.find_all(BLOCKS):
         tag.insert_before("\n")
         tag.append("\n")
@@ -167,7 +176,10 @@ def clean_text(node):
         tag.insert_before(" ")
         tag.insert_after(" ")
     lines = [re.sub(r"[^\S\n]+", " ", line).strip() for line in node.get_text().splitlines()]
-    return "\n".join(line for line in lines if line)
+    text = "\n".join(line for line in lines if line)
+    for marker, value in code_blocks:
+        text = text.replace(marker, value)
+    return text
 
 
 def html_doc(url, html):
@@ -182,14 +194,19 @@ def html_doc(url, html):
     base = web_url(url, page.base.get("href")) if page.base else url
     base = base or url
     found = [web_url(base, a.get("href")) for a in page.select("a[href], area[href]")]
-    for tag in page.select("script, style, template, svg, [aria-hidden=true], .katex-mathml"):
+    for formula in page.select(".katex"):
+        tex = formula.select_one('annotation[encoding="application/x-tex"]')
+        if tex:
+            formula.replace_with(" " + tex.get_text() + " ")
+    for tag in page.select("script, style, template, svg, [aria-hidden=true]"):
         tag.decompose()
     body = page.body or page
     # Blog article bodies retain source text while excluding the repeated sidebar.
     article = body.select_one(".markdown-content, .prose, [itemprop=articleBody]") if site_id(url) == "blog" and "/posts/" in url else None
     content = article or body
     links = {}
-    for tag in body.select("a[href],area[href],img,source[src],video,audio[src],iframe[src],object[data],button[data-full]"):
+    resources = "a[href],area[href],img,source[src],video,audio[src],iframe[src],object[data],button[data-full]"
+    for tag in (article.select(resources) if article else []) + body.select(resources):
         attr = (tag.get("href") or tag.get("data-full") or tag.get("data-src") or tag.get("src")
                 or tag.get("poster") or tag.get("data"))
         address = web_url(base, attr)
@@ -205,7 +222,17 @@ def html_doc(url, html):
         value = btn["data-copy"].strip()
         if value and value not in btn.get_text(" ", strip=True):
             btn.append(" " + value)
-    doc = dict(path=virtual_path(url), title=title, url=url, text=clean_text(content),
+    text = clean_text(content)
+    if article:
+        meta_lines = []
+        for key, label in (("article:published_time", "发布日期"), ("article:modified_time", "更新日期"),
+                           ("article:author", "作者"), ("article:section", "分类"), ("article:tag", "标签"),
+                           ("og:description", "摘要")):
+            values = [t["content"].strip() for t in page.find_all("meta", property=key, content=True)]
+            if values:
+                meta_lines.append(label + "  " + "，".join(dict.fromkeys(values)))
+        text = "\n".join([*meta_lines, "", text]).lstrip("\n")
+    doc = dict(path=virtual_path(url), title=title, url=url, text=text,
                links=[[label, address] for address, label in links.items()])
     return doc, [address for address in found if address]
 
@@ -260,7 +287,7 @@ def render_special(ident, root, client, rules, put):
                     address = web_url(root, full["data-full"] if full else img["src"])
                     if not address:
                         continue
-                    key = urlsplit(address).path.lstrip("/")
+                    key = virtual_path(address).removesuffix("/index.txt").removeprefix("assets/images/")
                     caption = figure.get_text(" ", strip=True)
                     put(dict(path="images/" + key + ".txt", title=img.get("alt") or caption or key,
                              url=address, text=caption, links=[["原图", address], ["画廊", root]]))
