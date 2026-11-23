@@ -15,6 +15,8 @@ from xml.etree import ElementTree
 
 import requests
 from bs4 import BeautifulSoup, Comment
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "public/data"
@@ -61,6 +63,10 @@ def site_id(url):
 def session():
     client = requests.Session()
     client.headers["User-Agent"] = "HachileTerminal/1.0 (+https://terminal.hachile.org/)"
+    retries = Retry(total=2, connect=1, read=1, backoff_factor=0.5, allowed_methods={"GET"},
+                    status_forcelist=(429, 500, 502, 503, 504), raise_on_status=False)
+    for scheme in ("https://", "http://"):
+        client.mount(scheme, HTTPAdapter(max_retries=retries))
     return client
 
 
